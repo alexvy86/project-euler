@@ -91,14 +91,17 @@ def compute_for_max_side_size(side_size):
     temp_dict = dict()
     a = side_size
     f_start = time.time()
-    for b in range(a, MAX_SIDE_SIZE + 1):
-        for c in range(b, MAX_SIDE_SIZE + 1):
+    for b in range(1, a + 1):
+        if number_of_new_cubes_in_layer_n(a,b,1,1) > MAX_LAYER_SIZE: break # pylint: disable=multiple-statements
+        for c in range(1, b + 1):
             layer_num = 1
             layer_size = number_of_new_cubes_in_layer_n(a,b,c,layer_num)
+            if layer_size > MAX_LAYER_SIZE: break # pylint: disable=multiple-statements
             while layer_size < MAX_LAYER_SIZE:
                 temp_dict[layer_size] = temp_dict.get(layer_size, 0) + 1
                 layer_num += 1
                 layer_size = number_of_new_cubes_in_layer_n(a,b,c,layer_num)
+
     print(f"Checked cuboids of shape {a}*b*c in {round(time.time() - f_start,4)} seconds")
     return temp_dict
 
@@ -119,10 +122,12 @@ def compute_with_parallelism():
 def compute_without_parallelism():
     for a in range(1, MAX_SIDE_SIZE + 1):
         f2_start = time.time()
-        for b in range(a, MAX_SIDE_SIZE + 1):
-            for c in range(b, MAX_SIDE_SIZE + 1):
+        for b in range(1, a+1):
+            if number_of_new_cubes_in_layer_n(a,b,1,1) > MAX_LAYER_SIZE: break # pylint: disable=multiple-statements
+            for c in range(1, b+1):
                 layer_num = 1
                 layer_size = number_of_new_cubes_in_layer_n(a,b,c,layer_num)
+                if layer_size > MAX_LAYER_SIZE: break # pylint: disable=multiple-statements
                 while layer_size < MAX_LAYER_SIZE:
                     c_n_dict[layer_size] = c_n_dict.get(layer_size, 0) + 1
                     if c_n_dict[layer_size] == 1000:
