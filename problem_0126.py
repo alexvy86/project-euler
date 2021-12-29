@@ -41,14 +41,6 @@ from multiprocessing import Pool
 memoized_results = {}
 def number_of_new_cubes_in_layer_n(a,b,c,n):
     return 4*n*n + 4*n*(a + b + c - 3) + (a + b - 2)*(2*c - 4) + 2*a*b
-    a,b,c = sorted([a,b,c]) # The orientation of the cuboid doesn't matter, consider only one for memoization purposes
-    key = f"{a}_{b}_{c}_{n}"
-    if key not in memoized_results:
-        memoized_results[key] = 4*n*n + 4*n*(a + b + c - 3) + (a + b - 2)*(2*c - 4) + 2*a*b
-    return memoized_results[key]
-
-#a, b, c, n = [int(arg) for arg in sys.argv[1:]]
-#print(f"{number_of_new_cubes_in_layer_n(a,b,c,n)} cubes in layer {n} for cuboid {a},{b},{c}")
 
 def get_number_of_cuboids_with_a_layer_of_desired_size(size):
     result = 0
@@ -69,18 +61,6 @@ def get_number_of_cuboids_with_a_layer_of_desired_size(size):
                         break
                     current_layer += 1
     return result
-
-#TEST_LAYER_SIZE = 22
-#number_of_cuboids_with_layer_of_size = get_number_of_cuboids_with_a_layer_of_desired_size(TEST_LAYER_SIZE)
-#print(f"Number of cuboids with a layer of size {TEST_LAYER_SIZE}: {number_of_cuboids_with_layer_of_size}")
-
-DESIRED_NUMBER_OF_CUBOIDS = 10
-# for layer_size in range(2, 10000, 2): # There's always an even number of cuboids in any layer, no point in checking odd-sized ones
-#     cuboids_with_layers_of_this_size = get_number_of_cuboids_with_a_layer_of_desired_size(layer_size)
-#     print(f"Checked layer size {layer_size}: {cuboids_with_layers_of_this_size}")
-#     if cuboids_with_layers_of_this_size == DESIRED_NUMBER_OF_CUBOIDS:
-#         print(f"Least value of n for which C(n) == {DESIRED_NUMBER_OF_CUBOIDS}: {layer_size}")
-#         sys.exit()
 
 MAX_SIDE_SIZE, MAX_LAYER_SIZE = [int(arg) for arg in sys.argv[1:]]
 
@@ -142,8 +122,22 @@ if __name__ == "__main__":
     print(f"Computing with MAX_SIDE_SIZE={MAX_SIDE_SIZE} and MAX_LAYER_SIZE={MAX_LAYER_SIZE}")
     start = time.time()
     compute_with_parallelism()
-    print(f"Finished in {round(time.time() - start,4)} seconds")
+    print(f"Finished in {round(time.time() - start,4)} seconds (MAX_SIDE_SIZE={MAX_SIDE_SIZE} and MAX_LAYER_SIZE={MAX_LAYER_SIZE})")
 
     for s in [22, 46, 78, 118, 154]:
-        print(f"C({s}) = {c_n_dict[s]}")
+        print(f"C({s}) = {c_n_dict.get(s,'not present')}")
     print(f"First 10 values of n for with C(n) = 1000: {sorted(ns_with_value_of_1000)[0:10]}")
+
+# Right answer: 18522
+# Wrong answers: 18576, 20590, 21862, 22398, 25750, 26282, 26332, 26772, 26892, 27286, 30746, 31012, 31454, 31716, 32604, 33446
+
+# 2000 500000
+# [21862, 25750, 26332, 26772, 27286, 33446, 40166, 40454, 41612]
+# 2000 1000000
+# [21862, 25750, 26332, 26772, 27286, 33446, 40166, 40454, 41612]
+# 3000 200000
+# [18576, 20590, 22398, 26282, 26892, 30746, 31012, 31454, 31716, 32604]
+# 5000 200000
+# [18522, 18576, 18880, 22398, 26892, 28400, 32604, 34164, 45188, 47276]
+# 5000 20000
+# [18522, 18576, 18880]
