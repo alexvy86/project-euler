@@ -35,6 +35,7 @@ how many of them match the desired layer-size.
 
 import sys
 import time
+import random
 from multiprocessing import Pool
 
 memoized_results = {}
@@ -103,7 +104,9 @@ def compute_for_max_side_size(side_size):
 
 def compute_with_parallelism():
     with Pool() as p:
-        result_dicts = p.map(compute_for_max_side_size, list(range(1, MAX_SIDE_SIZE + 1)))
+        side_size_list = list(range(1, MAX_SIDE_SIZE + 1))
+        random.shuffle(side_size_list)
+        result_dicts = p.map(compute_for_max_side_size, side_size_list)
         print(f"Processing {len(result_dicts)} dictionaries from multiprocessing")
         for d in result_dicts:
             for layer_size, count in d.items():
