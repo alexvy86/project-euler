@@ -81,27 +81,60 @@ DESIRED_NUMBER_OF_CUBOIDS = 10
 #         print(f"Least value of n for which C(n) == {DESIRED_NUMBER_OF_CUBOIDS}: {layer_size}")
 #         sys.exit()
 
-MAX_SIDE_SIZE = 100
-MAX_LAYERS_TO_COMPUTE = 1000
+MAX_SIDE_SIZE, MAX_LAYER_SIZE = [int(arg) for arg in sys.argv[1:]]
 
 c_n_dict = {}
 ns_with_value_of_1000 = set()
 
-if __name__ == "__main__":
-    print(f"Computing with MAX_SIDE_SIZE={MAX_SIDE_SIZE} and MAX_LAYERS_TO_COMPUTE={MAX_LAYERS_TO_COMPUTE}")
+def compute_for_max_side_size(side_size):
+    temp_dict = dict()
+    a = side_size
+    f_start = time.time()
+    for b in range(a, MAX_SIDE_SIZE + 1):
+        for c in range(b, MAX_SIDE_SIZE + 1):
+            layer_num = 1
+            layer_size = number_of_new_cubes_in_layer_n(a,b,c,layer_num)
+            while layer_size < MAX_LAYER_SIZE:
+                temp_dict[layer_size] = temp_dict.get(layer_size, 0) + 1
+                layer_num += 1
+                layer_size = number_of_new_cubes_in_layer_n(a,b,c,layer_num)
+    print(f"Checked cuboids of shape {a}*b*c in {round(time.time() - f_start,4)} seconds")
+    return temp_dict
+
+def compute_with_parallelism():
+    with Pool() as p:
+        result_dicts = p.map(compute_for_max_side_size, list(range(1, MAX_SIDE_SIZE + 1)))
+        print(f"Processing {len(result_dicts)} dictionaries from multiprocessing")
+        for d in result_dicts:
+            for layer_size, count in d.items():
+                c_n_dict[layer_size] = c_n_dict.get(layer_size, 0) + count
+                if c_n_dict[layer_size] == 1000:
+                    ns_with_value_of_1000.add(layer_size)
+                if c_n_dict[layer_size] > 1000 and layer_size in ns_with_value_of_1000:
+                    ns_with_value_of_1000.remove(layer_size)
+
+def compute_without_parallelism():
     for a in range(1, MAX_SIDE_SIZE + 1):
-        start = time.time()
-        #print(f"c_n: {c_n_dict}")
+        f2_start = time.time()
         for b in range(a, MAX_SIDE_SIZE + 1):
             for c in range(b, MAX_SIDE_SIZE + 1):
-                for layer_num in range (1, MAX_LAYERS_TO_COMPUTE + 1):
-                    layer_size = number_of_new_cubes_in_layer_n(a,b,c,layer_num)
+                layer_num = 1
+                layer_size = number_of_new_cubes_in_layer_n(a,b,c,layer_num)
+                while layer_size < MAX_LAYER_SIZE:
                     c_n_dict[layer_size] = c_n_dict.get(layer_size, 0) + 1
                     if c_n_dict[layer_size] == 1000:
                         ns_with_value_of_1000.add(layer_size)
-                    if c_n_dict[layer_size] == 1001 and layer_size in ns_with_value_of_1000:
+                    if c_n_dict[layer_size] > 1000 and layer_size in ns_with_value_of_1000:
                         ns_with_value_of_1000.remove(layer_size)
-        print(f"Checked cuboids of shape {a}*b*c in {round(time.time() - start,4)} seconds")
+                    layer_num += 1
+                    layer_size = number_of_new_cubes_in_layer_n(a,b,c,layer_num)
+        print(f"Checked cuboids of shape {a}*b*c in {round(time.time() - f2_start,4)} seconds")
+
+if __name__ == "__main__":
+    print(f"Computing with MAX_SIDE_SIZE={MAX_SIDE_SIZE} and MAX_LAYER_SIZE={MAX_LAYER_SIZE}")
+    start = time.time()
+    compute_with_parallelism()
+    print(f"Finished in {round(time.time() - start,4)} seconds")
 
     for s in [22, 46, 78, 118, 154]:
         print(f"C({s}) = {c_n_dict[s]}")
